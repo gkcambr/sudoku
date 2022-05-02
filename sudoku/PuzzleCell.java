@@ -19,11 +19,12 @@ package sudoku;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectStreamException;
 import java.io.Serializable;
+import static java.lang.Math.pow;
+import java.util.LinkedList;
 import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -38,10 +39,10 @@ public class PuzzleCell extends JButton implements Comparable<PuzzleCell>, Seria
     PuzzleCell(PuzzleWindow win) {
         // only used for reader
         super();
-        _win = win;
-        _row = null;
-        _col = null;
-        _square = null;
+        myPuzzleWindow = win;
+        myRow = null;
+        myCol = null;
+        mySquare = null;
     }
 
     PuzzleCell(
@@ -51,26 +52,17 @@ public class PuzzleCell extends JButton implements Comparable<PuzzleCell>, Seria
             PuzzleSquare square,
             PuzzleWindow win) {
         super();
-        _number = no;
-        _row = row;
-        _col = col;
-        _square = square;
-        _win = win;
+        myNumber = no;
+        myRow = row;
+        myCol = col;
+        mySquare = square;
+        myPuzzleWindow = win;
         addListener();
     }
 
-    void resetPossibles() {
-        if (_type == VALUE_TYPE_AVAILABLE) {
-            for (int p = 0; p < 9; p++) {
-                _possibleValues[p] = VALUE_TYPE_AVAILABLE;
-            }
-        }
-    }
-
     void reset() {
-        _value = UNDEFINED;
-        _type = VALUE_TYPE_AVAILABLE;
-        resetPossibles();
+        myValue = UNDEFINED;
+        myType = VALUE_TYPE_AVAILABLE;
         setText("");
         setBackground(PuzzleCell.FIELD_COLOR);
     }
@@ -80,40 +72,40 @@ public class PuzzleCell extends JButton implements Comparable<PuzzleCell>, Seria
             @Override
             public void actionPerformed(ActionEvent e) {
                 PuzzleCell cell = (PuzzleCell) e.getSource();
-                _win.selectCell(cell);
-                _win.openNumberDialog(cell);
+                myPuzzleWindow.selectCell(cell);
+                myPuzzleWindow.openNumberDialog(cell);
             }
 
         });
-        resetPossibles();
+    }
+    
+    void store(java.io.ObjectOutputStream out) throws IOException {
+        writeObject(out);
     }
 
-    void writeObject(java.io.ObjectOutputStream out)
+    private void writeObject(java.io.ObjectOutputStream out)
             throws IOException {
-        out.write(RW_OFFSET + _number);
-        out.write(RW_OFFSET + _value);
-        out.write(RW_OFFSET + _type);
+        out.write(RW_OFFSET + myNumber);
+        out.write(RW_OFFSET + myValue);
+        out.write(RW_OFFSET + myType);
     }
 
-    int restoreAll(String readFile, ObjectInputStream ois) {
+    int restoreAll(ObjectInputStream ois) {
         int ret = 0;
 
         try {
             readObject(ois);
-        } catch (FileNotFoundException ex) {
+        } catch (IOException | ClassNotFoundException ex) {
             Logger.getLogger(PuzzleWindow.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (IOException ex) {
-            Logger.getLogger(PuzzleWindow.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (ClassNotFoundException ex) {
-            Logger.getLogger(PuzzleCell.class.getName()).log(Level.SEVERE, null, ex);
         }
         return ret;
     }
 
-    int readObject(java.io.ObjectInputStream in)
+    private int readObject(java.io.ObjectInputStream in)
             throws IOException, ClassNotFoundException {
         int storedNumbers = 0;
-        int number = 0, value = 0;
+        int number = 0;
+        int value = 0;
         int rd = in.read();
         int cnt = 0;
         while (rd > 0) {
@@ -127,9 +119,11 @@ public class PuzzleCell extends JButton implements Comparable<PuzzleCell>, Seria
                     break;
                 case 2:
                     int type = rd;
-                    _win.setCell(number, value, type);
+                    myPuzzleWindow.setCell(number, value, type);
                     storedNumbers += 1;
                     cnt = 0;
+                    break;
+                default:
                     break;
             }
             rd = in.read();
@@ -137,15 +131,15 @@ public class PuzzleCell extends JButton implements Comparable<PuzzleCell>, Seria
         return storedNumbers;
     }
 
-    void readObjectNoData()
+    private void readObjectNoData()
             throws ObjectStreamException {
-
+        // do nothing
     }
 
     @Override
     public int compareTo(PuzzleCell c) {
         int ret = -1;
-
+        
         if (this.hashCode() == c.hashCode()) {
             ret = 0;
         }
@@ -179,94 +173,76 @@ public class PuzzleCell extends JButton implements Comparable<PuzzleCell>, Seria
     }
 
     PuzzleRow getRow() {
-        return _row;
+        return myRow;
     }
 
     PuzzleColumn getColumn() {
-        return _col;
+        return myCol;
     }
 
     PuzzleSquare getSquare() {
-        return _square;
+        return mySquare;
+    }
+    
+    void updateAvailableValues() {
+            myRow.updateAvailableValues();
+            myCol.updateAvailableValues();
+            mySquare.updateAvailableValues();
     }
 
     void setValue(int value) {
         if (value > 0 && value < 10) {
-            _value = value;
-            _possibleValues[value - 1] = NumberDialog.ASSIGNED_CONFLICT;
+            myValue = value;
             setText("" + value);
+            updateAvailableValues();
         } else {
             setText("");
         }
+        updateAvailableValues();
     }
 
     int getValue() {
-        return _value;
+        return myValue;
     }
 
     void setType(int type) {
-        _type = type;
+        myType = type;
     }
 
     int getType() {
-        return _type;
+        return myType;
     }
 
     int getNumber() {
-        return _number;
-    }
-    
-    void setPossibleValue(Integer member, Integer value) {
-       if(member >= 0 && member < 9) {
-           _possibleValues[member] = value;
-       }
-    }
-    
-    boolean arePossiblesIdentical(PuzzleCell otherCell) {
-        boolean ret = true;
-        
-        int noPossibles = _possibleValues.length;
-        int othersPossibles = otherCell.getPossibleValues().length;
-        if(noPossibles != othersPossibles) {
-            ret = false;
-        }
-        else {
-            for(Integer v : otherCell.getPossibleValues()) {
-                if(!Objects.equals(_possibleValues[v], v)) {
-                    ret = false;
-                    break;
-                }
-            }
-        }
-        
-        return ret;
+        return myNumber;
     }
 
-    Integer[] getPossibleValues() {
+    Integer[] computePossibleValues() {
         // pass by value
         Integer[] av = new Integer[0];
 
-        if(_type != VALUE_TYPE_AVAILABLE) {
+        updateAvailableValues();
+        if(myType != VALUE_TYPE_AVAILABLE) {
             return av;
         }
         
-        int availCnt = 0;
-        Integer[] availableValues = new Integer[9];
-        for (int v = 0; v < 9; v++) {
-            if (_possibleValues[v] == PuzzleCell.VALUE_TYPE_AVAILABLE) {
-                availableValues[availCnt++] = v;
+        int cellAvs = myRow.getValues();
+        cellAvs &= myCol.getValues();
+        cellAvs &= mySquare.getValues();
+        LinkedList<Integer> intAvs = new LinkedList<>();
+        for(int bit = 0; bit < 9; bit++) {
+            if(((int) pow(2,bit) & cellAvs) > 0) {
+                intAvs.add(bit + 1);
             }
         }
-        av = new Integer[availCnt];
-        System.arraycopy(availableValues, 0, av, 0, availCnt);
-
+        av = intAvs.toArray(new Integer[intAvs.size()]);
         return av;
     }
 
-    boolean ValueIsAvailable(Integer v) {
+    boolean valueIsAvailable(Integer v) {
         boolean ret = false;
 
-        Integer[] availables = getPossibleValues();
+        Integer[] availables = computePossibleValues();
         for (Integer av : availables) {
             if (Objects.equals(av, v)) {
                 ret = true;
@@ -275,61 +251,32 @@ public class PuzzleCell extends JButton implements Comparable<PuzzleCell>, Seria
         }
         return ret;
     }
-    
-    boolean availablesMatch(PuzzleCell cell) {
-        // the two lists must be identical for this
-        // method to return true;
-        boolean ret = true;
-        
-        if(cell == null) {
-            return false;
-        }
-        
-        if (cell.getPossibleValues().length != getPossibleValues().length) {
-            return false;
-        }
-        
-        for(Integer value : getPossibleValues()) {
-            if(cell.ValueIsAvailable(value) == false) {
-                return false;
-            }
-        }
-        
-        for(Integer value : cell.getPossibleValues()) {
-            if(ValueIsAvailable(value) == false) {
-                return false;
-            }
-        }
-        
-        return ret;
-    }
 
     /* properties */
-    public final static Color BUTTON_COLOR = new Color(173, 216, 230);
-    public final static Color FIELD_COLOR = Color.WHITE;
-    public final static Color HIGHLIGHT_COLOR = Color.YELLOW;
-    public final static Color ERROR_COLOR = Color.RED;
-    public final static Color HINT_COLOR = Color.RED;
+    public static final Color BUTTON_COLOR = new Color(173, 216, 230);
+    public static final Color FIELD_COLOR = Color.WHITE;
+    public static final Color HIGHLIGHT_COLOR = Color.YELLOW;
+    public static final Color ERROR_COLOR = Color.RED;
+    public static final Color HINT_COLOR = Color.RED;
 
     // button value types
-    public final static int VALUE_TYPE_ALL = -1;
-    public final static int VALUE_TYPE_AVAILABLE = 0;
-    public final static int VALUE_TYPE_SET = 1;
-    public final static int VALUE_TYPE_TRY = 2;
-    public final static int VALUE_TYPE_EXCLUDED = 3;
-    public final static int VALUE_TYPE_AUTO = 4;
-    public final static int VALUE_TYPE_UPDATE_CLR = 5;
-    public final static int UNDEFINED = -1;
+    public static final int VALUE_TYPE_ALL = -1;
+    public static final int VALUE_TYPE_AVAILABLE = 0;
+    public static final int VALUE_TYPE_SET = 1;
+    public static final int VALUE_TYPE_TRY = 2;
+    public static final int VALUE_TYPE_EXCLUDED = 3;
+    public static final int VALUE_TYPE_AUTO = 4;
+    public static final int VALUE_TYPE_UPDATE_CLR = 5;
+    public static final int UNDEFINED = -1;
 
-    private final PuzzleRow _row;
-    private final PuzzleColumn _col;
-    private final PuzzleSquare _square;
-    private final PuzzleWindow _win;
-    private int _number;
-    private int _value = UNDEFINED;
-    private int _type = VALUE_TYPE_AVAILABLE;
-    private final Integer[] _possibleValues = new Integer[9];
-    private final int RW_OFFSET = 10;
+    private final PuzzleRow myRow;
+    private final PuzzleColumn myCol;
+    private final PuzzleSquare mySquare;
+    private final PuzzleWindow myPuzzleWindow;
+    private int myNumber;
+    private int myValue = UNDEFINED;
+    private int myType = VALUE_TYPE_AVAILABLE;
+    private static final int RW_OFFSET = 10;
     
     private static final long serialVersionUID = 101;
 }

@@ -16,33 +16,41 @@
  */
 package sudoku;
 
-import helpUtilities.HelpMenu;
+import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Image;
 import java.awt.Insets;
 import java.awt.Point;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.ObjectOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.util.LinkedList;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.BorderFactory;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JMenuBar;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JTextPane;
 import javax.swing.WindowConstants;
+import javax.swing.border.EmptyBorder;
 
 /**
  *
@@ -51,23 +59,46 @@ import javax.swing.WindowConstants;
 public class PuzzleWindow extends JFrame {
 
     PuzzleWindow() {
-        super("Sudoku Unlocked");
+        super(TITLE);
+        this.myHintList = new LinkedList<>();
         init();
     }
 
     final void init() {
         setLocation(600, 300);
-        _pane.setSize(450, 450);
-        this.setContentPane(_pane);
+        this.setMinimumSize(new Dimension(400, 620));
+
+        try {
+            // load the icon
+            String path = new File(".").getCanonicalPath()
+                    + File.separator + "sudoku.jpg";
+            ImageIcon icon = new ImageIcon(path);
+            Image image = icon.getImage();
+            this.setIconImage(image);
+        } catch (IOException ex) {
+            Logger.getLogger(PuzzleWindow.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        // create the content pane
+        myContentPane = (JPanel) this.getContentPane();
+        myContentPane.setLayout(new BorderLayout(10, 10));
+
+        myContentPane.setBorder(new EmptyBorder(10, 10, 10, 10));
+        myPuzzlePane.setPreferredSize(new Dimension(400, 460));
+        myContentPane.add(myPuzzlePane, BorderLayout.CENTER);
+        myInfoPane.setPreferredSize(new Dimension(400, 160));
+        myContentPane.add(myInfoPane, BorderLayout.AFTER_LAST_LINE);
+
         createRows();
         createColumns();
         drawSquares();
-        drawButtons();
+        drawCells();
+        drawInfoPane();
         setTitle(TITLE);
         createMenuBar();
-        getRootPane().setJMenuBar(_menuBar);
+        getRootPane().setJMenuBar(myMenuBar);
         setVisible(true);
-        
+
         setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
         addWindowListener(new WindowListener() {
             @Override
@@ -78,7 +109,7 @@ public class PuzzleWindow extends JFrame {
             @Override
             public void windowClosing(WindowEvent e) {
                 int dlgOption = JOptionPane.OK_OPTION;
-                if ((_fileMenu.getOpenFile() != null) && (_fileMenu.isFileDirty())) {
+                if ((myFileMenu.getOpenFile() != null) && (myFileMenu.isFileDirty())) {
                     Object[] options = {"OK", "CANCEL"};
                     dlgOption = JOptionPane.showOptionDialog(null,
                             "If you click OK you will lose the\n"
@@ -92,10 +123,9 @@ public class PuzzleWindow extends JFrame {
                 }
                 if (dlgOption == JOptionPane.OK_OPTION) {
                     System.exit(0);
-                }
-                else {
-                    Graphics g = _pane.getGraphics();
-                    _pane.update(g);
+                } else {
+                    Graphics g = myContentPane.getGraphics();
+                    myContentPane.update(g);
                 }
             }
 
@@ -129,38 +159,38 @@ public class PuzzleWindow extends JFrame {
 
     void createMenuBar() {
 
-        _menuBar = new JMenuBar();
-        _fileMenu = new FileMenu(this);
-        _menuBar.add(_fileMenu);
-        _actionMenu = new ActionMenu(this);
-        _menuBar.add(_actionMenu);
-        _helpMenu = new HelpMenu(this);
-        _menuBar.add(_helpMenu);
-        _fileMenu.updateEnabledMenus(true);
+        myMenuBar = new JMenuBar();
+        myFileMenu = new FileMenu(this);
+        myMenuBar.add(myFileMenu);
+        myActionMenu = new ActionMenu(this);
+        myMenuBar.add(myActionMenu);
+        myHelpMenu = new HelpMenu(this);
+        myMenuBar.add(myHelpMenu);
+        myFileMenu.updateEnabledMenus(true);
     }
 
     void createRows() {
         for (int r = 0; r < 9; r++) {
-            _row[r] = new PuzzleRow(r);
+            myRow[r] = new PuzzleRow();
         }
     }
 
     void createColumns() {
         for (int c = 0; c < 9; c++) {
-            _column[c] = new PuzzleColumn(c);
+            myColumn[c] = new PuzzleColumn();
         }
     }
 
     void drawSquares() {
         // draw the puzzle pane
         GridBagLayout squareLayout = new GridBagLayout();
-        _pane.setLayout(squareLayout);
+        myPuzzlePane.setLayout(squareLayout);
 
         GridBagConstraints squareConstraints = new GridBagConstraints();
         int defaultWidth = squareConstraints.gridwidth;
         int defaultHeight = squareConstraints.gridheight;
         for (int sq = 0; sq < 9; sq++) {
-            _square[sq] = new PuzzleSquare(sq / 3, sq % 3);
+            mySquare[sq] = new PuzzleSquare(sq);
             squareConstraints.weightx = 1.0;
             squareConstraints.weighty = 1.0;
             squareConstraints.fill = GridBagConstraints.BOTH;
@@ -221,16 +251,116 @@ public class PuzzleWindow extends JFrame {
                     squareConstraints.gridwidth = GridBagConstraints.REMAINDER;
                     squareConstraints.gridheight = GridBagConstraints.REMAINDER;
                     break;
+                default:
+                    break;
             }
 
-            _square[sq].setBorder(BorderFactory.createLineBorder(Color.black));
+            mySquare[sq].getPanel().setBorder(BorderFactory.createLineBorder(Color.black));
             GridBagLayout buttonLayout = new GridBagLayout();
-            _square[sq].setLayout(buttonLayout);
-            _square[sq].setVisible(true);
-            squareLayout.setConstraints(_square[sq], squareConstraints);
-            _pane.add(_square[sq]);
+            mySquare[sq].getPanel().setLayout(buttonLayout);
+            mySquare[sq].getPanel().setSize(
+                    myContentPane.getWidth() / 3, myContentPane.getHeight() / 3);
+            mySquare[sq].getPanel().setVisible(true);
+            squareLayout.setConstraints(mySquare[sq].getPanel(), squareConstraints);
+            myPuzzlePane.add(mySquare[sq].getPanel());
         }
-        _pane.setVisible(true);
+        myPuzzlePane.setVisible(true);
+    }
+
+    void drawInfoPane() {
+
+        // draw the info pane
+        myInfoPane.setOpaque(false);
+        GridBagLayout infoLayout = new GridBagLayout();
+        myInfoPane.setLayout(infoLayout);
+
+        // draw the buttons
+        for (int b = 0; b < 18; b++) {
+            GridBagConstraints buttonConstraints = new GridBagConstraints();
+            int defaultWidth = buttonConstraints.gridwidth;
+            int defaultHeight = buttonConstraints.gridheight;
+
+            if (b < 9) {
+                myInfoButton[b] = new JButton("" + (b + 1));
+            } else {
+                myInfoButton[b] = new JButton("0");
+            }
+
+            buttonConstraints.weightx = 1.0;
+            buttonConstraints.weighty = 1.0;
+            buttonConstraints.fill = GridBagConstraints.BOTH;
+            myInfoButton[b].setFont(new Font("Arial", Font.PLAIN, 18));
+            myInfoButton[b].setMargin(new Insets(0, 0, 0, 0));
+            myInfoButton[b].setBorderPainted(false);
+            Dimension buttonSize = new Dimension(myInfoPane.getWidth() / 9,
+                    myInfoPane.getHeight() / 6);
+            myInfoButton[b].setPreferredSize(buttonSize);
+
+            // set the button constraints
+            buttonConstraints.gridx = b % 9;
+            buttonConstraints.gridy = b / 9;
+            buttonConstraints.gridwidth = defaultWidth;
+            buttonConstraints.gridheight = defaultHeight;
+
+            myInfoButton[b].setBackground(PuzzleCell.FIELD_COLOR);
+            myInfoButton[b].setVisible(true);
+            infoLayout.setConstraints(myInfoButton[b], buttonConstraints);
+            myInfoPane.add(myInfoButton[b]);
+        }
+
+        // draw the text pane
+        JTextPane infoText = new JTextPane();
+        GridBagConstraints textAreaConstraints = new GridBagConstraints();
+        int textAreaWidth = textAreaConstraints.gridwidth * 9;
+        int textAreaHeight = textAreaConstraints.gridheight;
+        textAreaConstraints.weightx = 1.0;
+        textAreaConstraints.weighty = 8.0;
+        textAreaConstraints.fill = GridBagConstraints.BOTH;
+        Dimension textAreaSize = new Dimension(myInfoPane.getWidth(),
+                myInfoPane.getHeight() / 2);
+        textAreaConstraints.gridx = 0;
+        textAreaConstraints.gridy = 2;
+        textAreaConstraints.gridwidth = textAreaWidth;
+        textAreaConstraints.gridheight = textAreaHeight;
+        infoText.setPreferredSize(textAreaSize);
+        String infoString = "Select a cell with the mouse. Enter the puzzle starting point ";
+        infoString += "using the 'set' button. Then try your own solution using the 'try' button.";
+        infoString += " To solve, select 'solve'.";
+        infoString += " You can load puzzles from the file menu, or save your own.\n\n";
+        infoString += "For help, select this 'hint' button  ";
+        infoText.setText(infoString);
+        JButton hintButton = new JButton("hint");
+        hintButton.setPreferredSize(new Dimension(50, 20));
+        hintButton.setBackground(PuzzleCell.FIELD_COLOR);
+        hintButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent event) {
+                showHints();
+            }
+        });
+        infoText.setCaretPosition(infoString.length());
+        infoText.insertComponent(hintButton);
+        infoText.setEditable(false);
+
+        infoLayout.setConstraints(infoText, textAreaConstraints);
+        myInfoPane.add(infoText);
+        setVisible(true);
+    }
+
+    void updateInfoCounts() {
+        int[] counts = new int[9];
+        for (int i = 0; i < 9; i++) {
+            counts[i] = 0;
+        }
+
+        for (PuzzleCell cell : myCell) {
+            if (cell.getType() != PuzzleCell.VALUE_TYPE_AVAILABLE) {
+                counts[cell.getValue() - 1] = 1 + counts[cell.getValue() - 1];
+            }
+        }
+        for (int b = 9; b < 18; b++) {
+            myInfoButton[b].setText("" + counts[b - 9]);
+        }
     }
 
     int findSquareNo(int row, int col) {
@@ -258,6 +388,8 @@ public class PuzzleWindow extends JFrame {
                     case 8:
                         sq = 2;
                         break;
+                    default:
+                        break;
                 }
                 break;
             case 3:
@@ -278,6 +410,8 @@ public class PuzzleWindow extends JFrame {
                     case 7:
                     case 8:
                         sq = 5;
+                        break;
+                    default:
                         break;
                 }
                 break;
@@ -300,37 +434,42 @@ public class PuzzleWindow extends JFrame {
                     case 8:
                         sq = 8;
                         break;
+                    default:
+                        break;
                 }
+                break;
+            default:
                 break;
         }
         return sq;
     }
 
-    void drawButtons() {
+    void drawCells() {
 
         for (int b = 0; b < 81; b++) {
             int r = b / 9;
             int c = b % 9;
-            PuzzleRow row = _row[r];
-            PuzzleColumn col = _column[c];
+            PuzzleRow row = myRow[r];
+            PuzzleColumn col = myColumn[c];
             int sqNo = findSquareNo(r, c);
-            PuzzleSquare sq = _square[sqNo];
+            PuzzleSquare sq = mySquare[sqNo];
             GridBagConstraints buttonConstraints = new GridBagConstraints();
             int defaultWidth = buttonConstraints.gridwidth;
             int defaultHeight = buttonConstraints.gridheight;
 
-            _cell[b] = new PuzzleCell(b, row, col, sq, this);
-            _cell[b].setType(PuzzleCell.VALUE_TYPE_AVAILABLE);
-            _cell[b].getRow().addMember(_cell[b]);
-            _cell[b].getColumn().addMember(_cell[b]);
-            _cell[b].getSquare().addMember(_cell[b]);
+            myCell[b] = new PuzzleCell(b, row, col, sq, this);
+            myCell[b].setType(PuzzleCell.VALUE_TYPE_AVAILABLE);
+            myCell[b].setMargin(new Insets(0, 0, 0, 0));
+            myCell[b].getRow().addMember(myCell[b]);
+            myCell[b].getColumn().addMember(myCell[b]);
+            myCell[b].getSquare().addMember(myCell[b]);
 
             buttonConstraints.weightx = 1.0;
             buttonConstraints.weighty = 1.0;
             buttonConstraints.fill = GridBagConstraints.BOTH;
-            _cell[b].setFont(new Font("Arial", Font.PLAIN, 18));
-            _cell[b].setMargin(new Insets(0, 0, 0, 0));
-            _cell[b].setPreferredSize(new Dimension(25, 25));
+            myCell[b].setFont(new Font("Arial", Font.PLAIN, 18));
+            myCell[b].setMargin(new Insets(0, 0, 0, 0));
+            myCell[b].setPreferredSize(new Dimension(25, 25));
 
             // set the constraints
             switch (b) {
@@ -460,53 +599,70 @@ public class PuzzleWindow extends JFrame {
                     buttonConstraints.gridheight = GridBagConstraints.REMAINDER;
                     buttonConstraints.gridwidth = GridBagConstraints.REMAINDER;
                     break;
+                default:
+                    break;
             }
 
-            _cell[b].setBackground(PuzzleCell.FIELD_COLOR);
-            _cell[b].setVisible(true);
-            GridBagLayout layout = (GridBagLayout) sq.getLayout();
-            layout.setConstraints(_cell[b], buttonConstraints);
-            sq.add(_cell[b]);
+            myCell[b].setBackground(PuzzleCell.FIELD_COLOR);
+            myCell[b].setVisible(true);
+            GridBagLayout layout = (GridBagLayout) sq.getPanel().getLayout();
+            layout.setConstraints(myCell[b], buttonConstraints);
+            sq.getPanel().add(myCell[b]);
             setVisible(true);
         }
     }
 
     void selectCell(PuzzleCell cell) {
-        if (_selectedCell != null) {
-            _selectedCell.highlight(false);
+        if (mySelectedCell != null) {
+            mySelectedCell.highlight(false);
         }
-        _selectedCell = cell;
-        _selectedCell.highlight(true);
+        mySelectedCell = cell;
+        mySelectedCell.highlight(true);
+        if (myHintCell != null) {
+            if (myHintCell.getText().contains("?")) {
+                myHintCell.setText("");
+            }
+            myHintCell = null;
+        }
     }
 
     void openNumberDialog(PuzzleCell cell) {
-        if (_numberDialog != null) {
-            _numberDialog.showHint();
-            _numberDialog.reset();
+        if (myNumberDialog != null) {
+            myNumberDialog.showHint();
+            myNumberDialog.reset();
+            if (cell.getType() != PuzzleCell.VALUE_TYPE_AVAILABLE) {
+                myNumberDialog.selectButton(cell.getValue() - 1);
+            }
             return;
         }
-        _numberDialog = new NumberDialog(this, false);
+        myNumberDialog = new NumberDialog(this, false);
         Point pt = getLocationOnScreen();
-        int ndw = _numberDialog.getWidth();
+        int ndw = myNumberDialog.getWidth();
         if (pt.x > ndw) {
             pt.x -= ndw;
         } else {
             pt.x += ndw;
         }
-        _numberDialog.setLocation(pt);
-        _numberDialog.showHint();
-        _numberDialog.setVisible(true);
+        myNumberDialog.setLocation(pt);
+        myNumberDialog.showHint();
+        myNumberDialog.setVisible(true);
+        if (cell.getType() != PuzzleCell.VALUE_TYPE_AVAILABLE) {
+            myNumberDialog.selectButton(cell.getValue() - 1);
+        }
     }
 
     void closeNumberDialog() {
-        _numberDialog = null;
+        if (myNumberDialog != null) {
+            myNumberDialog.dispose();
+            myNumberDialog = null;
+        }
         clearHighlights();
     }
 
     void clearHighlights() {
-        if (_highlightedCell != null) {
-            _highlightedCell.highlight(false);
-            _highlightedCell = null;
+        if (myHighlightedCell != null) {
+            myHighlightedCell.highlight(false);
+            myHighlightedCell = null;
         }
     }
 
@@ -514,53 +670,52 @@ public class PuzzleWindow extends JFrame {
         if (cell == null) {
             return NumberDialog.SELECTION_INVALID;
         }
-        _selectedCell = cell;
+        mySelectedCell = cell;
         if (type == PuzzleCell.VALUE_TYPE_UPDATE_CLR) {
-            _selectedCell.reset();
+            mySelectedCell.reset();
             return NumberDialog.SELECTION_OK;
         }
-        PuzzleCell existingButton = _selectedCell.getRow().containsValue(value);
+        PuzzleCell existingButton = mySelectedCell.getRow().containsValue(value);
         if (existingButton != null) {
             existingButton.showError(true);
-            _highlightedCell = existingButton;
+            myHighlightedCell = existingButton;
             return NumberDialog.ROW_CONFLICT;
         }
-        existingButton = _selectedCell.getColumn().containsValue(value);
+        existingButton = mySelectedCell.getColumn().containsValue(value);
         if (existingButton != null) {
             existingButton.showError(true);
-            _highlightedCell = existingButton;
+            myHighlightedCell = existingButton;
             return NumberDialog.COL_CONFLICT;
         }
-        existingButton = _selectedCell.getSquare().containsValue(value);
+        existingButton = mySelectedCell.getSquare().containsValue(value);
         if (existingButton != null) {
             existingButton.showError(true);
-            _highlightedCell = existingButton;
+            myHighlightedCell = existingButton;
             return NumberDialog.SQ_CONFLICT;
         }
-        _fileMenu.fileIsDirty();
-        setCell(_selectedCell.getNumber(), value, type);
+        myFileMenu.fileIsDirty();
+        setCell(mySelectedCell.getNumber(), value, type);
         if (type != PuzzleCell.VALUE_TYPE_AVAILABLE) {
-            removeFromHintList(_selectedCell);
+            removeFromHintList(mySelectedCell);
         }
         return NumberDialog.SELECTION_OK;
     }
 
     void clearAll() {
         clearEntries(PuzzleCell.VALUE_TYPE_ALL);
-        _solver = new Solver(this);
-        _hintList.clear();
-        _selectedCell = null;
-        _highlightedCell = null;
-        _solutionCounts = new Integer[]{0, 0, 0, 0, 0, 0, 0};
-        _solutionTree = null;
+        myHintList.clear();
+        mySelectedCell = null;
+        myHighlightedCell = null;
     }
 
     void clearEntries(int type) {
-        for (PuzzleCell cell : _cell) {
+        for (PuzzleCell cell : myCell) {
             if (type == PuzzleCell.VALUE_TYPE_ALL || cell.getType() == type) {
                 cell.reset();
             }
         }
+        computePossibleValues();
+        updateInfoCounts();
     }
 
     void saveFile(String saveFile) {
@@ -572,27 +727,28 @@ public class PuzzleWindow extends JFrame {
                     oos.write(ch);
                 }
                 for (int r = 0; r < 9; r++) {
-                    PuzzleCell[] cells = _row[r].getCells();
+                    PuzzleCell[] cells = myRow[r].getCells();
                     for (PuzzleCell cell : cells) {
-                        cell.writeObject(oos);
+                        cell.store(oos);
                     }
                 }
             }
-        } catch (FileNotFoundException ex) {
-            Logger.getLogger(PuzzleWindow.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
             Logger.getLogger(PuzzleWindow.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
     void readFile(String readFile) {
-        boolean succeeded = false, hdrOk = true;
+        boolean succeeded = false;
+        boolean hdrOk = true;
 
         clearEntries(PuzzleCell.VALUE_TYPE_ALL);
         PuzzleCell reader = new PuzzleCell(this);
+        FileInputStream fis = null;
+        ObjectInputStream ois = null;
         try {
-            FileInputStream fis = new FileInputStream(readFile);
-            ObjectInputStream ois = new ObjectInputStream(fis);
+            fis = new FileInputStream(readFile);
+            ois = new ObjectInputStream(fis);
             byte[] fileHdr = FILE_ID.getBytes();
             for (byte ch : fileHdr) {
                 byte fileCh = ois.readByte();
@@ -602,25 +758,38 @@ public class PuzzleWindow extends JFrame {
                 }
             }
             if (hdrOk) {
-                reader.restoreAll(readFile, ois);
+                reader.restoreAll(ois);
                 succeeded = true;
+                computePossibleValues();
             }
-        } catch (FileNotFoundException ex) {
-            Logger.getLogger(PuzzleWindow.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
             Logger.getLogger(PuzzleWindow.class.getName()).log(Level.SEVERE, null, ex);
         }
-        _selectedCell = null;
+        mySelectedCell = null;
         if (!succeeded) {
             int indx = readFile.lastIndexOf("/");
             String name = readFile.substring(indx);
             JOptionPane.showMessageDialog(null, "File " + name
                     + "\nis not a Sudoku Solver File.", "File Error", JOptionPane.ERROR_MESSAGE);
         }
+        if (fis != null) {
+            try {
+                fis.close();
+            } catch (IOException ex) {
+                Logger.getLogger(PuzzleWindow.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        if (ois != null) {
+            try {
+                ois.close();
+            } catch (IOException ex) {
+                Logger.getLogger(PuzzleWindow.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
     }
 
     void setCell(int number, int value, int type) {
-        PuzzleCell cell = _cell[number];
+        PuzzleCell cell = myCell[number];
         cell.setValue(value);
         cell.setType(type);
         cell.setBackground(PuzzleCell.FIELD_COLOR);
@@ -637,90 +806,36 @@ public class PuzzleWindow extends JFrame {
             default:
                 break;
         }
+        updateInfoCounts();
     }
 
     PuzzleCell getSelectedCell() {
-        return _selectedCell;
+        return mySelectedCell;
     }
 
     int computePossibleValues() {
-        int totalHints = 0;
 
-        // each check has to be completed for the entire cell population
-        // before the next check can be undertaken
-        for (PuzzleCell cell : _cell) {
-            cell.resetPossibles();
-        }
+        myHintList.clear();
 
         // multiple passes are needed to allow computations to build on previous pass results
-        for (int pass = 0; pass < MAX_COMPUTE_PASSES; pass++) {
-            int hintsThisPass = 0;
+        for (int pass = 1; pass < MAX_COMPUTE_PASSES; pass++) {
 
-            // eliminate all of the values in the cell's row, col and sq
-            for (PuzzleCell cell : _cell) {
-                _solver.eliminateAllAssignedValues(cell);
-                if (cell.getPossibleValues().length == 1) {
-                    if (addToHintList(cell, SOLUTION_EAV)) {
-                        hintsThisPass += 1;
-                    }
+            // grow the hint list by adding cells with the fewest number
+            // of possible values first
+            for (PuzzleCell cell : myCell) {
+                if ((cell.getType() == PuzzleCell.VALUE_TYPE_AVAILABLE)
+                        && (cell.computePossibleValues().length == pass)) {
+                    myHintList.add(cell);
                 }
             }
-
-            // check square, row and column cell values for duplicate possibles
-            // if there are no duplicates, we've found the value
-            // check all columns in a square to see if values assigned
-            // in these neighboring columns in other squares force a single
-            // value into this cell - as it is the only possible place for
-            // the value
-            for (PuzzleCell cell : _cell) {
-                _solver.checkForcingColumn(cell);
-                if (cell.getPossibleValues().length == 1) {
-                    if (addToHintList(cell, SOLUTION_CFC)) {
-                        hintsThisPass += 1;
-                    }
-                }
-            }
-
-            // check all rows in a square to see if values assigned
-            // in these neighboring columns in other squares force a single
-            // value into this cell - as it is the only possible place for
-            // the value
-            for (PuzzleCell cell : _cell) {
-                _solver.checkForcingRow(cell);
-                if (cell.getPossibleValues().length == 1) {
-                    if (addToHintList(cell, SOLUTION_CFR)) {
-                        hintsThisPass += 1;
-                    }
-                }
-            }
-
-            // check adjacent squares to see if they have unassigned
-            // cells in this cell's row and column that are constrained
-            // to a limited set of values. if so, this cell is the only
-            // location for the constrained possible value
-            // check if the 2 or 3 other available cells in this row have
-            // identical possibilities. if so, mark them as unavilable for
-            // this cell.
-            for (PuzzleCell cell : _cell) {
-                _solver.checkConstrainedSets(cell);
-                if (cell.getPossibleValues().length == 1) {
-                    if (addToHintList(cell, SOLUTION_CCS)) {
-                        hintsThisPass += 1;
-                    }
-                }
-            }
-            if (hintsThisPass == 0) {
-                break;
-            }
-            totalHints += hintsThisPass;
         }
-        return totalHints;
+        return myHintList.size();
     }
 
     PuzzleCell getNextHint() {
         PuzzleCell cell = null;
 
-        Iterator<PuzzleCell> it = _hintList.keySet().iterator();
+        Iterator<PuzzleCell> it = myHintList.iterator();
         if (it.hasNext()) {
             cell = it.next();
         }
@@ -728,66 +843,81 @@ public class PuzzleWindow extends JFrame {
     }
 
     void solve() {
-        resetSolutionCounts();
-        while (computePossibleValues() > 0) {
-            // computePossibleValues adds solutions to hintList
-            while (!_hintList.isEmpty()) {
-                PuzzleCell cell = getNextHint();
-                if (cell.getPossibleValues().length == 1) {
-                    Integer[] values = cell.getPossibleValues();
-                    if (values.length == 1) {
-                        updateCell(cell,
-                                cell.getPossibleValues()[0] + 1,
-                                PuzzleCell.VALUE_TYPE_AUTO);
-                    }
-                }
-                _hintList.remove(cell);
-            }
-        }
+
+        Solver solver = new Solver(this);
+        solver.solve();
+
         // is the puzzle solved?
         if (getAvailableCount() == 0) {
             // puzzle solved!
             JOptionPane.showMessageDialog(null,
                     "The puzzle has been solved.\n"
                     + "It is deterministic, meaning\n"
-                    + "this solution is inique.",
+                    + "this solution is unique.",
                     "Puzzle Solved",
                     JOptionPane.INFORMATION_MESSAGE);
-            return;
-        }
-        // we've exhausted all deterministic solutions
-        // we're going to try to solve by exhaustive guess
-        if (_solutionTree == null) {           
+            closeNumberDialog();
+        } else {
+            // we've exhausted all deterministic solutions
+            // we're going to try to solve by exhaustive guess
 
-            // soltionTree is recursive, don't start another one
-            _solutionTree = new SolutionTree(this, null);
-            new Thread(_solutionTree).start();
-        }
-    }
+            int option = JOptionPane.showConfirmDialog(null,
+                    "The puzzle has to be solved using\nrecursive trials. "
+                    + "it may take some time.\nHit OK to continue.",
+                    "Please Wait",
+                    JOptionPane.OK_CANCEL_OPTION);
 
-    boolean addToHintList(PuzzleCell cell, Integer solutionType) {
-        boolean ret = false;
+            if (option == JOptionPane.OK_OPTION) {
 
-        if (!_hintList.containsKey(cell)
-                && cell.getPossibleValues().length == 1) {
-            _hintList.put(cell, solutionType);
-            ret = true;
+                this.requestFocus();
+                Cursor cursor = this.getCursor();
+                this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                this.invalidate();
+
+                // soltionTree is recursive, don't start another one
+                SolutionTree solutionTree = new SolutionTree(this, 0);
+
+                // disable menus while solutionTree is running
+                updateEnabledMenus(false);
+
+                if (solutionTree.search()) {
+                    // puzzle solved!
+                    JOptionPane.showMessageDialog(null,
+                            "The puzzle has been solved.\n"
+                            + "It was solved by recursive trial.\n"
+                            + "There may be other solutions.",
+                            "Puzzle Solved",
+                            JOptionPane.INFORMATION_MESSAGE);
+                    closeNumberDialog();
+                } else {
+                    // puzzle NOT solved!
+                    JOptionPane.showMessageDialog(null,
+                            "The puzzle was not solved.\n"
+                            + "There may be no solutions.",
+                            "Puzzle Not Solved",
+                            JOptionPane.INFORMATION_MESSAGE);
+                }
+                solutionTree.reset();
+                this.setCursor(cursor);
+            }
+
+            // restore menus
+            updateEnabledMenus(true);
         }
-        return ret;
+        updateInfoCounts();
     }
 
     void removeFromHintList(PuzzleCell cell) {
-        if (_hintList.containsKey(cell)) {
-            Integer solutionNo = _hintList.get(cell);
-            _solutionCounts[solutionNo] += 1;
-            _hintList.remove(cell);
+        if (myHintList.contains(cell)) {
+            myHintList.remove(cell);
         }
     }
 
     PuzzleSquare[] getSquareRowNeighbors(PuzzleCell cell) {
         PuzzleSquare[] squares = new PuzzleSquare[2];
 
-        int sq1 = 0, sq2 = 0;
+        int sq1 = 0;
+        int sq2 = 0;
         int sq0 = cell.getSquare().getNumber();
         switch (sq0) {
             case 0:
@@ -826,16 +956,19 @@ public class PuzzleWindow extends JFrame {
                 sq1 = 6;
                 sq2 = 7;
                 break;
+            default:
+                break;
         }
-        squares[0] = _square[sq1];
-        squares[1] = _square[sq2];
+        squares[0] = mySquare[sq1];
+        squares[1] = mySquare[sq2];
         return squares;
     }
 
     PuzzleSquare[] getSquareColumnNeighbors(PuzzleCell cell) {
         PuzzleSquare[] squares = new PuzzleSquare[2];
 
-        int sq1 = 0, sq2 = 0;
+        int sq1 = 0;
+        int sq2 = 0;
         int sq0 = cell.getSquare().getNumber();
         switch (sq0) {
             case 0:
@@ -874,83 +1007,78 @@ public class PuzzleWindow extends JFrame {
                 sq1 = 2;
                 sq2 = 5;
                 break;
+            default:
+                break;
         }
-        squares[0] = _square[sq1];
-        squares[1] = _square[sq2];
+        squares[0] = mySquare[sq1];
+        squares[1] = mySquare[sq2];
         return squares;
     }
 
     void showHints() {
 
         computePossibleValues();
-        Iterator<PuzzleCell> it = _hintList.keySet().iterator();
-        while (it.hasNext()) {
+        Iterator<PuzzleCell> it = myHintList.iterator();
+        if (it.hasNext()) {
             PuzzleCell cell = it.next();
             selectCell(cell);
             cell.markAsHint(true);
-            if (_numberDialog != null) {
-                _numberDialog.showHint();
+            myHintCell = cell;
+            if (myNumberDialog != null) {
+                myNumberDialog.showHint();
             }
-            return;
-        }
-    }
-
-    void resetSolutionCounts() {
-        for (Integer sol : _solutionCounts) {
-            sol = 0;
         }
     }
 
     int getAvailableCount() {
         int cnt = 0;
 
-        for (PuzzleRow row : _row) {
-            cnt += row.getAvailableCells().length;
+        for (PuzzleCell cell : myCell) {
+            if (cell.getType() == PuzzleCell.VALUE_TYPE_AVAILABLE) {
+                cnt += 1;
+            }
         }
         return cnt;
     }
 
     PuzzleRow[] getRows() {
-        return _row;
+        return myRow;
     }
-    
+
     void updateEnabledMenus(boolean enabled) {
-        _fileMenu.updateEnabledMenus(enabled);
-        _actionMenu.updateEnabledMenus(enabled);
-        _helpMenu.updateEnabledMenus(enabled);
+        myFileMenu.updateEnabledMenus(enabled);
+        myActionMenu.updateEnabledMenus(enabled);
+        myHelpMenu.updateEnabledMenus(enabled);
+    }
+
+    LinkedList<PuzzleCell> getHintList() {
+        return myHintList;
     }
 
     /* properties */
-    final static String TITLE = "Sudoku Unlocked";
-    final static String FILE_ID = "SudokuSolverVersion_1_0";
-    private JMenuBar _menuBar;
-    private FileMenu _fileMenu;
-    private ActionMenu _actionMenu;
-    private HelpMenu _helpMenu;
-    private final JPanel _pane = new JPanel();
-    private Solver _solver = new Solver(this);
+    static final String TITLE = "Sudoku Unlocked";
+    static final String FILE_ID = "SudokuSolverVersion_1_0";
+    private JMenuBar myMenuBar;
+    private FileMenu myFileMenu;
+    private ActionMenu myActionMenu;
+    private HelpMenu myHelpMenu;
+    private JPanel myContentPane;
+    private final JPanel myPuzzlePane = new JPanel();
+    private final JPanel myInfoPane = new JPanel();
 
-    private final PuzzleRow[] _row = new PuzzleRow[9];
-    private final PuzzleColumn[] _column = new PuzzleColumn[9];
-    private final PuzzleSquare[] _square = new PuzzleSquare[9];
-    private final PuzzleCell[] _cell = new PuzzleCell[81];
-    private PuzzleCell _selectedCell = null;
-    private NumberDialog _numberDialog;
-    private PuzzleCell _highlightedCell = null;
-    private SolutionTree _solutionTree = null;
+    private final PuzzleRow[] myRow = new PuzzleRow[9];
+    private final PuzzleColumn[] myColumn = new PuzzleColumn[9];
+    private final PuzzleSquare[] mySquare = new PuzzleSquare[9];
+    private final PuzzleCell[] myCell = new PuzzleCell[81];
+    private final JButton[] myInfoButton = new JButton[18];
+    private PuzzleCell mySelectedCell = null;
+    private NumberDialog myNumberDialog;
+    private PuzzleCell myHighlightedCell = null;
 
-    private Integer[] _solutionCounts = new Integer[]{0, 0, 0, 0, 0, 0, 0};
-    final int SOLUTION_EAV = 0;
-    final int SOLUTION_CCS = 1;
-    final int SOLUTION_CFC = 2;
-    final int SOLUTION_CFR = 3;
-    final int SOLUTION_CSP = 4;
-    final int SOLUTION_CSCC = 5;
-    final int SOLUTION_CSCR = 6;
+    static final int MAX_COMPUTE_PASSES = 8;
 
-    final int MAX_COMPUTE_PASSES = 4;
-
-    LinkedHashMap<PuzzleCell, Integer> _hintList = new LinkedHashMap<>();
+    LinkedList<PuzzleCell> myHintList;
+    PuzzleCell myHintCell = null;
 
     private static final long serialVersionUID = 101;
 }

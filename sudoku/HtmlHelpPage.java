@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 G. Keith Cambron
+ * Copyright (C) 2020 keithc
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,30 +16,24 @@
  */
 package sudoku;
 
-import javax.swing.JPanel;
+/* HtmlHelpPage.java needs no other files. */
+import javax.swing.JOptionPane;
 
-/**
- *
- * @author keithc
- */
-public class PuzzleSquare extends SudokuSet {
-    
-    PuzzleSquare(int square) {
-        mySquare = square;
-        myPanel = new JPanel();
+public class HtmlHelpPage {
+
+    public HtmlHelpPage() {
+        init();
     }
 
-    public int getNumber() {
-        return mySquare;
+    final void init() {
+
+        JOptionPane.showMessageDialog(null,
+                "Go to <html>http://radiocheck.us/sudoku/helpFile.html</html>",
+                "Help",
+                JOptionPane.INFORMATION_MESSAGE);
     }
-    
-    JPanel getPanel() {
-        return myPanel;
-    }
-    
+
     /* properties */
-    private final int mySquare;
-    private final JPanel myPanel;
-
     private static final long serialVersionUID = 101;
+
 }

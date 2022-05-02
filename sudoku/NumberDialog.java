@@ -46,7 +46,7 @@ public class NumberDialog extends JDialog {
 
     NumberDialog(PuzzleWindow win, boolean modality) {
         super(win, modality);
-        _win = win;
+        myPuzzleWindow = win;
         init();
     }
 
@@ -69,9 +69,9 @@ public class NumberDialog extends JDialog {
             JButton button = new JButton();
             button.setBackground(PuzzleCell.FIELD_COLOR);
             if (b < 9) {
-                _buttons[b] = button;
+                myButtons[b] = button;
             }
-            button.setFont(new Font("Arial", Font.PLAIN, 18));
+            button.setFont(new Font(BUTTON_FONT, Font.PLAIN, 18));
             button.setMargin(new Insets(0, 0, 0, 0));
             button.setPreferredSize(new Dimension(25, 25));
             // set the constraints
@@ -83,7 +83,7 @@ public class NumberDialog extends JDialog {
                     constraints.gridheight = defaultHeight;
                     button.setText("1");
                     button.setActionCommand("1");
-                    button.addActionListener(_buttonListener);
+                    button.addActionListener(myButtonListener);
                     break;
                 case 1:
                     constraints.gridx = 1;
@@ -92,7 +92,7 @@ public class NumberDialog extends JDialog {
                     constraints.gridheight = defaultHeight;
                     button.setText("2");
                     button.setActionCommand("2");
-                    button.addActionListener(_buttonListener);
+                    button.addActionListener(myButtonListener);
                     break;
                 case 2:
                     constraints.gridx = 2;
@@ -101,7 +101,7 @@ public class NumberDialog extends JDialog {
                     constraints.gridheight = defaultHeight;
                     button.setText("3");
                     button.setActionCommand("3");
-                    button.addActionListener(_buttonListener);
+                    button.addActionListener(myButtonListener);
                     break;
                 case 3:
                     constraints.gridx = 0;
@@ -110,7 +110,7 @@ public class NumberDialog extends JDialog {
                     constraints.gridheight = defaultHeight;
                     button.setText("4");
                     button.setActionCommand("4");
-                    button.addActionListener(_buttonListener);
+                    button.addActionListener(myButtonListener);
                     break;
                 case 4:
                     constraints.gridx = 1;
@@ -119,7 +119,7 @@ public class NumberDialog extends JDialog {
                     constraints.gridheight = defaultHeight;
                     button.setText("5");
                     button.setActionCommand("5");
-                    button.addActionListener(_buttonListener);
+                    button.addActionListener(myButtonListener);
                     break;
                 case 5:
                     constraints.gridx = 2;
@@ -128,7 +128,7 @@ public class NumberDialog extends JDialog {
                     constraints.gridheight = defaultHeight;
                     button.setText("6");
                     button.setActionCommand("6");
-                    button.addActionListener(_buttonListener);
+                    button.addActionListener(myButtonListener);
                     break;
                 case 6:
                     constraints.gridx = 0;
@@ -137,7 +137,7 @@ public class NumberDialog extends JDialog {
                     constraints.gridheight = defaultHeight;
                     button.setText("7");
                     button.setActionCommand("7");
-                    button.addActionListener(_buttonListener);
+                    button.addActionListener(myButtonListener);
                     break;
                 case 7:
                     constraints.gridx = 1;
@@ -146,7 +146,7 @@ public class NumberDialog extends JDialog {
                     constraints.gridheight = defaultHeight;
                     button.setText("8");
                     button.setActionCommand("8");
-                    button.addActionListener(_buttonListener);
+                    button.addActionListener(myButtonListener);
                     break;
                 case 8:
                     constraints.gridx = 2;
@@ -155,47 +155,47 @@ public class NumberDialog extends JDialog {
                     constraints.gridheight = defaultHeight;
                     button.setText("9");
                     button.setActionCommand("9");
-                    button.addActionListener(_buttonListener);
+                    button.addActionListener(myButtonListener);
                     break;
                 case 9:
                     constraints.gridx = 0;
                     constraints.gridy = 3;
                     constraints.gridwidth = defaultWidth;
                     constraints.gridheight = defaultHeight;
-                    _setButton = button;
-                    _setButton.setBackground(PuzzleCell.BUTTON_COLOR);
-                    _setButton.addActionListener(new ActionListener() {
+                    JButton setButton = button;
+                    setButton.setBackground(PuzzleCell.BUTTON_COLOR);
+                    setButton.addActionListener(new ActionListener() {
                         @Override
                         public void actionPerformed(ActionEvent e) {
                             setResult();
                         }
 
                     });
-                    _setButton.setText("set");
-                    _setButton.setBorder(BorderFactory.createCompoundBorder( 
+                    setButton.setText("set");
+                    setButton.setBorder(BorderFactory.createCompoundBorder( 
                             BorderFactory.createBevelBorder( 
                                     BevelBorder.RAISED, 
                                     PuzzleCell.FIELD_COLOR, 
                                     PuzzleCell.FIELD_COLOR), 
                             BorderFactory.createEtchedBorder(EtchedBorder.LOWERED)));
-                    _setButton.setFont(new Font("Arial", Font.BOLD, 14));
+                    setButton.setFont(new Font(BUTTON_FONT, Font.BOLD, 14));
                     break;
                 case 10:
                     constraints.gridx = 1;
                     constraints.gridy = 3;
                     constraints.gridwidth = defaultWidth;
                     constraints.gridheight = defaultHeight;
-                    _tryButton = button;
-                    _tryButton.setBackground(PuzzleCell.BUTTON_COLOR);
-                    _tryButton.setText("try");
-                    _tryButton.setBorder(BorderFactory.createCompoundBorder( 
+                    JButton tryButton = button;
+                    tryButton.setBackground(PuzzleCell.BUTTON_COLOR);
+                    tryButton.setText("try");
+                    tryButton.setBorder(BorderFactory.createCompoundBorder( 
                             BorderFactory.createBevelBorder( 
                                     BevelBorder.RAISED, 
                                     PuzzleCell.FIELD_COLOR, 
                                     PuzzleCell.FIELD_COLOR), 
                             BorderFactory.createEtchedBorder(EtchedBorder.LOWERED)));
-                    _tryButton.setFont(new Font("Arial", Font.BOLD, 14));
-                    _tryButton.addActionListener(new ActionListener() {
+                    tryButton.setFont(new Font(BUTTON_FONT, Font.BOLD, 14));
+                    tryButton.addActionListener(new ActionListener() {
                         @Override
                         public void actionPerformed(ActionEvent e) {
                             tryResult();
@@ -208,23 +208,25 @@ public class NumberDialog extends JDialog {
                     constraints.gridy = 3;
                     constraints.gridwidth = GridBagConstraints.REMAINDER;
                     constraints.gridheight = defaultHeight;
-                    _clearButton = button;
-                    _clearButton.setBackground(PuzzleCell.BUTTON_COLOR);
-                    _clearButton.addActionListener(new ActionListener() {
+                    JButton clearButton = button;
+                    clearButton.setBackground(PuzzleCell.BUTTON_COLOR);
+                    clearButton.addActionListener(new ActionListener() {
                         @Override
                         public void actionPerformed(ActionEvent e) {
                             clearResult();
                         }
 
                     });
-                    _clearButton.setText("clr");
-                    _clearButton.setBorder(BorderFactory.createCompoundBorder( 
+                    clearButton.setText("clr");
+                    clearButton.setBorder(BorderFactory.createCompoundBorder( 
                             BorderFactory.createBevelBorder( 
                                     BevelBorder.RAISED, 
                                     PuzzleCell.FIELD_COLOR, 
                                     PuzzleCell.FIELD_COLOR), 
                             BorderFactory.createEtchedBorder(EtchedBorder.LOWERED)));
-                    _clearButton.setFont(new Font("Arial", Font.BOLD, 14));
+                    clearButton.setFont(new Font(BUTTON_FONT, Font.BOLD, 14));
+                    break;
+                default:
                     break;
             }
             layout.setConstraints(button, constraints);
@@ -247,16 +249,16 @@ public class NumberDialog extends JDialog {
         constraints.gridwidth = GridBagConstraints.REMAINDER;
         constraints.gridheight = GridBagConstraints.REMAINDER;
         JCheckBox hint = new JCheckBox("");
-        hint.setSelected(_hint);
+        hint.setSelected(myHint);
         hint.addItemListener(new ItemListener() {
             @Override
             public void itemStateChanged(ItemEvent e) {
-                _hint = (e.getStateChange() == ItemEvent.SELECTED);
-                if (_hint == true) {
+                myHint = (e.getStateChange() == ItemEvent.SELECTED);
+                if (myHint) {
                     showHint();
                 } else {
                     for (int b = 0; b < 9; b++) {
-                        _buttons[b].setBackground(PuzzleCell.FIELD_COLOR);
+                        myButtons[b].setBackground(PuzzleCell.FIELD_COLOR);
                     }
                 }
             }
@@ -266,93 +268,91 @@ public class NumberDialog extends JDialog {
     }
 
     void showHint() {
-        if (_hint) {
-            _win.computePossibleValues();
-            PuzzleCell cell = _win.getSelectedCell();
+        if (myHint) {
+            myPuzzleWindow.computePossibleValues();
+            PuzzleCell cell = myPuzzleWindow.getSelectedCell();
             if (cell == null) {
                 return;
             }
             for (int v = 0; v < 9; v++) {
-                _buttons[v].setBackground(PuzzleCell.ERROR_COLOR);
+                myButtons[v].setBackground(PuzzleCell.ERROR_COLOR);
             }
             if (cell.getType() != PuzzleCell.VALUE_TYPE_AVAILABLE) {
                 return;
             }
-            for (Integer value : cell.getPossibleValues()) {
-                _buttons[value].setBackground(PuzzleCell.FIELD_COLOR);
-            }
-            if (cell.getPossibleValues().length == 1) {
-                Integer possible = cell.getPossibleValues()[0];
-                _buttons[possible].setBackground(PuzzleCell.HIGHLIGHT_COLOR);
-                this._selectedButtonNo = possible;
+            for (Integer value : cell.computePossibleValues()) {
+                myButtons[value - 1].setBackground(PuzzleCell.FIELD_COLOR);
+                if(mySelectedButtonNo == PuzzleCell.UNDEFINED) {
+                    myButtons[value - 1].requestFocus();
+                    myButtons[value - 1].doClick();
+                }
             }
         }
     }
 
     void selectButton(int no) {
 
-        if (_selectedButtonNo != PuzzleCell.UNDEFINED) {
-            _buttons[_selectedButtonNo].setBackground(PuzzleCell.FIELD_COLOR);
-            if (_selectedButtonNo == no) {
-                _selectedButtonNo = PuzzleCell.UNDEFINED;
+        if (mySelectedButtonNo != PuzzleCell.UNDEFINED) {
+            myButtons[mySelectedButtonNo].setBackground(PuzzleCell.FIELD_COLOR);
+            if (mySelectedButtonNo == no) {
                 return;
             }
         }
-        _buttons[no].setBackground(PuzzleCell.HIGHLIGHT_COLOR);
-        _selectedButtonNo = no;
+        myButtons[no].setBackground(PuzzleCell.HIGHLIGHT_COLOR);
+        mySelectedButtonNo = no;
         showHint();
     }
 
     void setResult() {
-        if (_selectedButtonNo != PuzzleCell.UNDEFINED) {
-            int result = _win.updateCell(
-                    _win.getSelectedCell(),
-                    _selectedButtonNo + 1,
+        if (mySelectedButtonNo != PuzzleCell.UNDEFINED) {
+            int result = myPuzzleWindow.updateCell(
+                    myPuzzleWindow.getSelectedCell(),
+                    mySelectedButtonNo + 1,
                     PuzzleCell.VALUE_TYPE_SET);
             switch (result) {
                 case ROW_CONFLICT:
-                    JOptionPane.showMessageDialog(null, "Row Conflict", "Invalid Choice", JOptionPane.ERROR_MESSAGE);
-                    _win.clearHighlights();
+                    JOptionPane.showMessageDialog(null, "Row Conflict", ERROR_INVALID_CHOICE, JOptionPane.ERROR_MESSAGE);
+                    myPuzzleWindow.clearHighlights();
                     return;
                 case COL_CONFLICT:
-                    JOptionPane.showMessageDialog(null, "Column Conflict", "Invalid Choice", JOptionPane.ERROR_MESSAGE);
-                    _win.clearHighlights();
+                    JOptionPane.showMessageDialog(null, "Column Conflict", ERROR_INVALID_CHOICE, JOptionPane.ERROR_MESSAGE);
+                    myPuzzleWindow.clearHighlights();
                     return;
                 case SQ_CONFLICT:
-                    JOptionPane.showMessageDialog(null, "Square Conflict", "Invalid Choice", JOptionPane.ERROR_MESSAGE);
-                    _win.clearHighlights();
+                    JOptionPane.showMessageDialog(null, "Square Conflict", ERROR_INVALID_CHOICE, JOptionPane.ERROR_MESSAGE);
+                    myPuzzleWindow.clearHighlights();
                     return;
                 default:
                     break;
             }
-            _buttons[_selectedButtonNo].setBackground(PuzzleCell.FIELD_COLOR);
+            myButtons[mySelectedButtonNo].setBackground(PuzzleCell.FIELD_COLOR);
         }
     }
 
     void tryResult() {
-        if (_selectedButtonNo != PuzzleCell.UNDEFINED) {
-            int result = _win.updateCell(
-                    _win.getSelectedCell(),
-                    _selectedButtonNo + 1,
+        if (mySelectedButtonNo != PuzzleCell.UNDEFINED) {
+            int result = myPuzzleWindow.updateCell(
+                    myPuzzleWindow.getSelectedCell(),
+                    mySelectedButtonNo + 1,
                     PuzzleCell.VALUE_TYPE_TRY);
             switch (result) {
                 case ROW_CONFLICT:
-                    JOptionPane.showMessageDialog(null, "Row Conflict", "Invalid Choice", JOptionPane.ERROR_MESSAGE);
-                    _win.clearHighlights();
+                    JOptionPane.showMessageDialog(null, "Row Conflict", ERROR_INVALID_CHOICE, JOptionPane.ERROR_MESSAGE);
+                    myPuzzleWindow.clearHighlights();
                     return;
                 case COL_CONFLICT:
-                    JOptionPane.showMessageDialog(null, "Column Conflict", "Invalid Choice", JOptionPane.ERROR_MESSAGE);
-                    _win.clearHighlights();
+                    JOptionPane.showMessageDialog(null, "Column Conflict", ERROR_INVALID_CHOICE, JOptionPane.ERROR_MESSAGE);
+                    myPuzzleWindow.clearHighlights();
                     return;
                 case SQ_CONFLICT:
-                    JOptionPane.showMessageDialog(null, "Square Conflict", "Invalid Choice", JOptionPane.ERROR_MESSAGE);
-                    _win.clearHighlights();
+                    JOptionPane.showMessageDialog(null, "Square Conflict", ERROR_INVALID_CHOICE, JOptionPane.ERROR_MESSAGE);
+                    myPuzzleWindow.clearHighlights();
                     return;
                 default:
                     break;
             }
-            _buttons[_selectedButtonNo].setBackground(PuzzleCell.FIELD_COLOR);
-            if (_win.getAvailableCount() == 0) {
+            myButtons[mySelectedButtonNo].setBackground(PuzzleCell.FIELD_COLOR);
+            if (myPuzzleWindow.getAvailableCount() == 0) {
                 // puzzle solved!
                 JOptionPane.showMessageDialog(null,
                         "The puzzle has been solved.",
@@ -360,12 +360,17 @@ public class NumberDialog extends JDialog {
                         JOptionPane.INFORMATION_MESSAGE);
             }
         }
+        mySelectedButtonNo = PuzzleCell.UNDEFINED;
     }
 
     void clearResult() {
-        _win.updateCell(_win.getSelectedCell(),
-                _selectedButtonNo + 1,
+        if(mySelectedButtonNo < 0 || mySelectedButtonNo > 8) {
+            return;
+        }
+        myPuzzleWindow.updateCell(myPuzzleWindow.getSelectedCell(),
+                mySelectedButtonNo + 1,
                 PuzzleCell.VALUE_TYPE_UPDATE_CLR);
+                myButtons[mySelectedButtonNo].setBackground(PuzzleCell.FIELD_COLOR);
     }
 
     class DialogButtonListener implements ActionListener {
@@ -387,13 +392,13 @@ public class NumberDialog extends JDialog {
 
         @Override
         public void windowClosing(WindowEvent e) {
-            _win.closeNumberDialog();
+            myPuzzleWindow.closeNumberDialog();
         }
 
         @Override
         public void windowClosed(WindowEvent e) {
             // do nothing
-            _win.closeNumberDialog();
+            myPuzzleWindow.closeNumberDialog();
         }
 
         @Override
@@ -419,31 +424,31 @@ public class NumberDialog extends JDialog {
     }
 
     void reset() {
-        if (_hint == false) {
-            _selectedButtonNo = PuzzleCell.UNDEFINED;
+        if (!myHint) {
+            mySelectedButtonNo = PuzzleCell.UNDEFINED;
         }
     }
 
     /* properties */
     // selection errors
-    public final static int SELECTION_OK = 0;
-    public final static int ROW_CONFLICT = 1;
-    public final static int COL_CONFLICT = 2;
-    public final static int SQ_CONFLICT = 3;
-    public final static int SET_CONFLICT = 4;
-    public final static int COL_FORCED = 5;
-    public final static int ROW_FORCED = 6;
-    public final static int SELECTION_INVALID = 8;
-    public final static int ASSIGNED_CONFLICT = 9;
+    public static final int SELECTION_OK = 0;
+    public static final int ROW_CONFLICT = 1;
+    public static final int COL_CONFLICT = 2;
+    public static final int SQ_CONFLICT = 3;
+    public static final int SET_CONFLICT = 4;
+    public static final int COL_FORCED = 5;
+    public static final int ROW_FORCED = 6;
+    public static final int SELECTION_INVALID = 8;
+    public static final int ASSIGNED_CONFLICT = 9;
+    
+    public static final String BUTTON_FONT = "Arial";
+    public static final String ERROR_INVALID_CHOICE = "Invalid Choice";
 
-    private final JButton[] _buttons = new JButton[9];
-    private JButton _setButton;
-    private JButton _tryButton;
-    private JButton _clearButton;
-    private int _selectedButtonNo = PuzzleCell.UNDEFINED;
-    private final PuzzleWindow _win;
-    private final ActionListener _buttonListener = new DialogButtonListener();
-    private static boolean _hint = false;
+    private final JButton[] myButtons = new JButton[9];
+    private int mySelectedButtonNo = PuzzleCell.UNDEFINED;
+    private final PuzzleWindow myPuzzleWindow;
+    private final transient ActionListener myButtonListener = new DialogButtonListener();
+    private static boolean myHint = false;
     
     private static final long serialVersionUID = 101;
 }

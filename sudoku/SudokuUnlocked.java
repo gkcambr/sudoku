@@ -26,11 +26,11 @@ public class SudokuUnlocked {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        PuzzleWindow _win = new PuzzleWindow();
-        _win.setSize(400, 400);
-        _win.setVisible(true);
+        PuzzleWindow puzzleWindow = new PuzzleWindow();
+        puzzleWindow.setSize(400, 400);
+        puzzleWindow.setVisible(true);
     }    
     
-    public static final String VERSION = "Sudoku Unlocked Version 1.1";
-    public static final String VERSION_DATE = "January 20, 2020";
+    public static final String VERSION = "Sudoku Unlocked Version 2.0";
+    public static final String VERSION_DATE = "April 15, 2022";
 }

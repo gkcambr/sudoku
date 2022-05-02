@@ -35,25 +35,21 @@ public class FileMenu extends Menu {
     FileMenu(PuzzleWindow listerWindow) {
         super(listerWindow);
         createMenu();
-        _puzzleWindow.setTitle(PuzzleWindow.TITLE + " - untitled.spf");
+        myPuzzleWindow.setTitle(PuzzleWindow.TITLE + " - untitled.spf");
     }
-
-    @Override
-    @SuppressWarnings("Convert2Lambda")
-    public final void createMenu() {
-        setMnemonic(KeyEvent.VK_F);
-        setText("File");
-
+    
+    void createNewFileItem() {
+        
         // create a new Lister file item
-        _fileNewItem = new JMenuItem("New", null);
-        _fileNewItem.setMnemonic(KeyEvent.VK_N);
-        _fileNewItem.setToolTipText("Create a new sudoku file");
-        _fileNewItem.addActionListener(new ActionListener() {
+        myFileNewItem = new JMenuItem("New", null);
+        myFileNewItem.setMnemonic(KeyEvent.VK_N);
+        myFileNewItem.setToolTipText("Create a new sudoku file");
+        myFileNewItem.addActionListener(new ActionListener() {
             int dlgOption = JOptionPane.OK_OPTION;
 
             @Override
             public void actionPerformed(ActionEvent event) {
-                if (_openFile != null && _fileIsDirty) {
+                if (myOpenFile != null && myFileIsDirty) {
                     Object[] options = {"OK", "CANCEL"};
                     dlgOption = JOptionPane.showOptionDialog(null,
                             "If you click OK you will lose the\n"
@@ -66,21 +62,24 @@ public class FileMenu extends Menu {
                             options[0]);
                 }
                 if (dlgOption == JOptionPane.OK_OPTION) {
-                    _puzzleWindow.setTitle(PuzzleWindow.TITLE + " - untitled.spf");
-                    _puzzleWindow.clearAll();
-                    _fileIsDirty = false;
+                    myPuzzleWindow.setTitle(PuzzleWindow.TITLE + " - untitled.spf");
+                    myPuzzleWindow.clearAll();
+                    myFileIsDirty = false;
                 }
             }
         });
-
+    }
+    
+    void createOpenFileItem() {
+        
         // open a puzzle file
-        _fileOpenItem = new JMenuItem("Open", null);
-        _fileOpenItem.setMnemonic(KeyEvent.VK_O);
-        _fileOpenItem.setToolTipText("Open a puzzle file");
-        _fileOpenItem.addActionListener(new ActionListener() {
+        myFileOpenItem = new JMenuItem("Open", null);
+        myFileOpenItem.setMnemonic(KeyEvent.VK_O);
+        myFileOpenItem.setToolTipText("Open a puzzle file");
+        myFileOpenItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent event) {
-                if (_workingDir == null) {
+                if (myWorkingDir == null) {
 
                     // find the application directory
                     String workingDir = this.getClass().getProtectionDomain().getCodeSource().getLocation().toString();
@@ -93,10 +92,10 @@ public class FileMenu extends Menu {
                             workingDir = workingDir + "/" + "puzzles";
                         }
                     }
-                    _workingDir = workingDir;
+                    myWorkingDir = workingDir;
                 }
                 int dlgOption = JOptionPane.OK_OPTION;
-                if (_openFile != null && _fileIsDirty) {
+                if (myOpenFile != null && myFileIsDirty) {
                     Object[] options = {"OK", "CANCEL"};
                     dlgOption = JOptionPane.showOptionDialog(null,
                             "If you click OK you will lose the\n"
@@ -109,91 +108,110 @@ public class FileMenu extends Menu {
                             options[0]);
                 }
                 if (dlgOption == JOptionPane.OK_OPTION) {
-                    JFileChooser chooser = new JFileChooser(_workingDir);
+                    JFileChooser chooser = new JFileChooser(myWorkingDir);
                     FileNameExtensionFilter filter = new FileNameExtensionFilter("Sudoku puzzle files", "spf");
                     chooser.setFileFilter(filter);
                     int returnVal = chooser.showOpenDialog(null);
                     if (returnVal == JFileChooser.APPROVE_OPTION) {
                         File file = chooser.getSelectedFile();
-                        _puzzleWindow.clearAll();
-                        _puzzleWindow.readFile(file.getAbsolutePath());
-                        _workingDir = chooser.getCurrentDirectory().getAbsolutePath();
-                        _puzzleWindow.setTitle(PuzzleWindow.TITLE + " - " + file.getName());
-                        _openFile = file;
-                        _fileIsDirty = false;
+                        myPuzzleWindow.clearAll();
+                        myPuzzleWindow.readFile(file.getAbsolutePath());
+                        myWorkingDir = chooser.getCurrentDirectory().getAbsolutePath();
+                        myPuzzleWindow.setTitle(PuzzleWindow.TITLE + " - " + file.getName());
+                        myOpenFile = file;
+                        myFileIsDirty = false;
                     }
                 }
             }
         });
-
+    }
+    
+    void createSaveFileItem() {
+        
         // save a puzzle file
-        _fileSaveItem = new JMenuItem("Save", null);
-        _fileSaveItem.setMnemonic(KeyEvent.VK_S);
-        _fileSaveItem.setToolTipText("Save puzzle to file");
-        _fileSaveItem.addActionListener(new ActionListener() {
+        myFileSaveItem = new JMenuItem("Save", null);
+        myFileSaveItem.setMnemonic(KeyEvent.VK_S);
+        myFileSaveItem.setToolTipText("Save puzzle to file");
+        myFileSaveItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent event) {
-                if (_workingDir == null) {
-                    _workingDir = System.getProperty("user.dir");
+                if (myWorkingDir == null) {
+                    myWorkingDir = System.getProperty("user.dir");
                 }
-                JFileChooser chooser = new JFileChooser(_workingDir);
-                if (_openFile != null) {
-                    chooser.setSelectedFile(_openFile);
+                JFileChooser chooser = new JFileChooser(myWorkingDir);
+                if (myOpenFile != null) {
+                    chooser.setSelectedFile(myOpenFile);
                 }
                 FileNameExtensionFilter filter = new FileNameExtensionFilter("Sudoku puzzle files", "spf");
                 chooser.setFileFilter(filter);
                 int returnVal = chooser.showOpenDialog(null);
                 if (returnVal == JFileChooser.APPROVE_OPTION) {
                     File file = chooser.getSelectedFile();
-                    _puzzleWindow.saveFile(file.getAbsolutePath());
-                    _puzzleWindow.setTitle(PuzzleWindow.TITLE + " - " + file.getName());
-                    _fileIsDirty = false;
+                    myPuzzleWindow.saveFile(file.getAbsolutePath());
+                    myPuzzleWindow.setTitle(PuzzleWindow.TITLE + " - " + file.getName());
+                    myFileIsDirty = false;
                 }
             }
         });
-        _fileSaveItem.setEnabled(false);
-
+        myFileSaveItem.setEnabled(false);
+    }
+    
+    void createExitFileItem() {
+        
         // exit
-        JMenuItem exitItem = new JMenuItem("Exit", null);
-        exitItem.setMnemonic(KeyEvent.VK_E);
-        exitItem.setToolTipText("Exit application");
-        exitItem.addActionListener((ActionEvent event) -> {
-            _puzzleWindow.dispatchEvent(
-                    new WindowEvent(_puzzleWindow, WindowEvent.WINDOW_CLOSING));
+        myExitItem = new JMenuItem("Exit", null);
+        myExitItem.setMnemonic(KeyEvent.VK_E);
+        myExitItem.setToolTipText("Exit application");
+        myExitItem.addActionListener((ActionEvent event) -> {
+            myPuzzleWindow.dispatchEvent(
+                    new WindowEvent(myPuzzleWindow, WindowEvent.WINDOW_CLOSING));
         });
+    }
 
-        add(_fileNewItem);
-        add(_fileOpenItem);
-        add(_fileSaveItem);
-        add(exitItem);
+    @Override
+    @SuppressWarnings("Convert2Lambda")
+    public final void createMenu() {
+        setMnemonic(KeyEvent.VK_F);
+        setText("File");
+
+        createNewFileItem();
+        createOpenFileItem();
+        createSaveFileItem();
+        createExitFileItem();
+
+        add(myFileNewItem);
+        add(myFileOpenItem);
+        add(myFileSaveItem);
+        add(myExitItem);
     }
 
     void fileIsDirty() {
-        _fileIsDirty = true;
+        myFileIsDirty = true;
     }
 
     boolean isFileDirty() {
-        return _fileIsDirty;
+        return myFileIsDirty;
     }
 
     File getOpenFile() {
-        return _openFile;
+        return myOpenFile;
     }
 
     @Override
     public void updateEnabledMenus(boolean enabled) {
 
-        _fileNewItem.setEnabled(enabled);
-        _fileOpenItem.setEnabled(enabled);
-        _fileSaveItem.setEnabled(enabled);
+        myFileNewItem.setEnabled(enabled);
+        myFileOpenItem.setEnabled(enabled);
+        myFileSaveItem.setEnabled(enabled);
     }
 
     // Properties
-    private JMenuItem _fileNewItem;
-    private JMenuItem _fileOpenItem;
-    private JMenuItem _fileSaveItem;
-    private String _workingDir;
-    private File _openFile = null;
-    private boolean _fileIsDirty = false;
+    private JMenuItem myFileNewItem;
+    private JMenuItem myFileOpenItem;
+    private JMenuItem myFileSaveItem;
+    private JMenuItem myExitItem;
+    private String myWorkingDir;
+    private File myOpenFile = null;
+    private boolean myFileIsDirty = false;
     private static final long serialVersionUID = 100L;
 }

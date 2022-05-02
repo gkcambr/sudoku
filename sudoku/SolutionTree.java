@@ -16,235 +16,170 @@
  */
 package sudoku;
 
-import java.util.Stack;
-import javax.swing.JOptionPane;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
+import java.util.LinkedList;
+import java.util.Arrays;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
  * @author keithc
  */
-public class SolutionTree implements Runnable {
-
-    SolutionTree(PuzzleWindow win, PuzzleCell parent) {
-        _puzzleWindow = win;
-        _parentCell = parent;
-        _instanceNo = ++_instanceCnt;
-        int cellNo = -1;
-        if (parent != null) {
-            cellNo = parent.getNumber();
-        }
-        if (DEBUG) {
-            System.out.println("cell # " + cellNo + " is starting instance # " + _instanceNo);
+public class SolutionTree {
+    
+    SolutionTree(PuzzleWindow win, int cellIndex) {
+        myPuzzleWindow = win;
+        myCellIndex = cellIndex;
+        buildCandidateList();
+        if ((DEBUG) && (cellIndex < getCandidateList().size())) {
+            String logmsg = String.format("starting index # " + cellIndex
+                    + " for cell # " + getCandidateList().get(cellIndex).getNumber());
+            logMessage(logmsg);
         }
     }
-
-    @Override
-    public void run() {
-
-        // disable menus while solutionTree is running
-        _puzzleWindow.updateEnabledMenus(false);
-
-        boolean result = solve();
-
-        // is the puzzle solved?
-        if (result == true && _puzzleWindow.getAvailableCount() == 0) {
-            // puzzle solved!
-            JOptionPane.showMessageDialog(null,
-                    "The puzzle has been solved.\n"
-                    + "It was solved by recursive trial.\n"
-                    + "There may be other solutions.",
-                    "Puzzle Solved",
-                    JOptionPane.INFORMATION_MESSAGE);
-        } else {
-            // puzzle NOT solved!
-            JOptionPane.showMessageDialog(null,
-                    "The puzzle was not solved.\n"
-                    + "There may be no solutions.",
-                    "Puzzle Not Solved",
-                    JOptionPane.INFORMATION_MESSAGE);
+    
+    public static void logMessage(String msg) {
+        
+        if(myLog == null) {
+            try {
+                myLog = new PrintWriter(myLogFile);
+            } catch (FileNotFoundException ex) {
+                Logger.getLogger(SolutionTree.class.getName()).log(Level.SEVERE, null, ex);
+                return;
+            }
         }
-
-        // enable menus
-        _puzzleWindow.updateEnabledMenus(true);
+        myLog.append(msg + "\n");
+        myLog.flush();
     }
 
-    boolean solve() {
+    public boolean search() {
         boolean ret = false;
 
-        int candidates = buildCandidateList();
-        if (candidates == 0) {
-            // no candidates means this solution can't work, back out
+        if (buildTryList() < 1) {
             if (DEBUG) {
-                System.out.println("instance " + _instanceNo + " has no candidates, giving up");
+                String logmsg = String.format(myTryCell.getNumber() + 
+                        "try list is empty for cell # ");
+                logMessage(logmsg);
             }
             return ret;
         }
 
-        int cellNo = -1;
-        if (_parentCell != null) {
-            cellNo = _parentCell.getNumber();
-        }
-        if (DEBUG) {
-            System.out.print("instance # " + _instanceNo + " cell # " + cellNo + " candidate list:");
-            for (PuzzleCell c : _cellCandidates) {
-                System.out.print(" " + c.getNumber());
+        int myTryIndex = 0;
+
+        while (myTryIndex < myTryList.length) {
+            int tryValue = myTryList[myTryIndex];
+
+            // try the available value
+            myPuzzleWindow.setCell(myTryCell.getNumber(), tryValue, PuzzleCell.VALUE_TYPE_AUTO);
+
+            // recompute possible values
+            myPuzzleWindow.computePossibleValues();
+
+            if (DEBUG) {
+                String logmsg = String.format("trying value " + 
+                        tryValue + " for cell " + myTryCell.getNumber());
+                logMessage(logmsg);
             }
-            System.out.print("\n");
-        }
-        while (_cellCandidates.size() > 0) {
-            PuzzleCell cell = getNextCell();
-            if (_instanceNo == 1) {
-                int f = 1;
-            }
-            if (cell != null) {
-                ret = tryPossible(cell);
-                if (ret == false) {
-                    _cellCandidates.remove(cell);
-                } else {
-                    if (DEBUG) {
-                        System.out.println("SUCCESS");
-                    }
-                    break;
+
+            if (myCellIndex == (getCandidateList().size() - 1)) {
+                // we assigned a valid value to the last cell.
+                // we found a solution for this cell!
+                if (DEBUG) {
+                    String logmsg = String.format("cell number " + 
+                            myTryCell.getNumber() + " has a valid candidates, giving up");
+                    logMessage(logmsg);
                 }
-            }
-        }
-        _cellTries.clear();
-        return ret;
-    }
-
-    int buildCandidateList() {
-
-        // populate a set of stacks according to the number of
-        // possible values in the cell members. for example, a
-        // cell with two possible values will go into the third
-        // stack in the list
-        if (_cellCandidates == null) {
-            _cellCandidates = new Stack<>();
-        }
-        for (int pv = 9; pv > 0; pv--) {
-            for (PuzzleRow row : _puzzleWindow.getRows()) {
-                if (row != null) {
-                    PuzzleCell[] avails = row.getAvailableCells();
-                    for (PuzzleCell cell : avails) {
-                        if (cell.getPossibleValues().length == pv) {
-                            _cellCandidates.push(cell);
-                        }
-                    }
-                }
-            }
-        }
-        return _cellCandidates.size();
-    }
-
-    PuzzleCell getNextCell() {
-        PuzzleCell cell = null;
-
-        if (_cellCandidates == null) {
-            _cellCandidates = new Stack<>();
-            buildCandidateList();
-        }
-
-        if (!_cellCandidates.isEmpty()) {
-            cell = _cellCandidates.pop();
-        }
-        return cell;
-    }
-
-    boolean tryPossible(PuzzleCell cell) {
-        boolean ret = false;
-
-        _puzzleWindow.computePossibleValues();
-        Integer[] values = cell.getPossibleValues();
-        for (Integer val : values) {
-            int noHints = 0;
-            _cellTries.add(cell);
-            int result1 = _puzzleWindow.updateCell(
-                    cell,
-                    val + 1,
-                    PuzzleCell.VALUE_TYPE_AUTO);
-            if (result1 != NumberDialog.SELECTION_OK) {
-                int f = 1;
-                continue;
-            }
-            // process all hints that are generated from this
-            // value try assumption
-            while (_puzzleWindow.computePossibleValues() > 0) {
-                PuzzleCell nextCell = _puzzleWindow.getNextHint();
-                while (nextCell != null) {
-                    noHints += 1;
-                    _cellTries.add(nextCell);
-                    int result2 = NumberDialog.SELECTION_INVALID;
-                    if (nextCell.getPossibleValues().length == 1) {
-                        result2 = _puzzleWindow.updateCell(
-                                nextCell,
-                                nextCell.getPossibleValues()[0] + 1,
-                                PuzzleCell.VALUE_TYPE_AUTO);
-                    }
-                    if (result2 != NumberDialog.SELECTION_OK) {
-                        int f = 1;
-                    }
-                    _puzzleWindow.removeFromHintList(nextCell);
-                    nextCell = _puzzleWindow.getNextHint();
-                }
-            }
-            // did we solve the puzzle?
-            if (_puzzleWindow.getAvailableCount() == 0) {
-                // puzzled solved!
                 ret = true;
                 break;
             }
-            if (noHints > 0) {
-                // we made some progress,
-                // try to solve the remainder with another guess
+
+            SolutionTree child = new SolutionTree(myPuzzleWindow, myCellIndex + 1);
+            ret = child.search();
+
+            if (ret) {
+                // we have found a solution!
+                break;
+            }
+
+            // the child has no candidates
+            // reset the cell
+            myTryCell.reset();
+
+            // try the next possible value
+            if (++myTryIndex >= myTryList.length) {
+                // we tried the last value
+                // means this solution can't work, back out
                 if (DEBUG) {
-                    System.out.println("instance # " + _instanceNo + " trying cell # " + cell.getNumber() + " using value "
-                            + cell.getValue() + " generated " + noHints + " hints");
+                    String logmsg = String.format("cell number " + 
+                            myTryCell.getNumber() + " has no more candidates, giving up");
+                    logMessage(logmsg);
                 }
-                SolutionTree nextTree = new SolutionTree(_puzzleWindow, cell);
-                boolean solved = nextTree.solve();
-                if (solved) {
-                    // puzzle solved!
-                    ret = true;
-                    break;
-                } else {
-                    // puzzle NOT solved, try the next possible
-                    restoreCellTries();
-                }
-            } else {
-                // this is a dead end. our guess resulted in
-                // no hints at all - no progress
-                // restore all of the tried cells and move on
-                // to the next possible value for the cell
-                restoreCellTries();
+
+                // recompute possible values
+                myPuzzleWindow.computePossibleValues();
                 ret = false;
+                break;
             }
         }
         return ret;
     }
 
-    void restoreCellTries() {
-        // put back all of the cells in the try list
-        // to the available state
-        while (!_cellTries.isEmpty()) {
-            int lastCellNo = _cellTries.size() - 1;
-            PuzzleCell nextCell = _cellTries.elementAt(lastCellNo);
-            _puzzleWindow.updateCell(nextCell,
-                    PuzzleCell.UNDEFINED,
-                    PuzzleCell.VALUE_TYPE_UPDATE_CLR);
-            _cellTries.remove(lastCellNo);
+    final int buildCandidateList() {
+
+        // populate the list of available cells. we will walk down
+        // the list trying different values. keep track of the possible
+        // values we have tried. if we move down the list and fail to
+        // find a possible value, we must move back to the previous cell
+        // in the list and try a different value. continue this process
+        // until we have succeeded in trying a valid value in the last
+        // cell in the list, or we have exhausted all possibilities.
+        if (getCandidateList() == null) {
+            setCandidateList( new LinkedList<>() );
+            PuzzleRow[] rows = myPuzzleWindow.getRows();
+            for (PuzzleRow row : rows) {
+                PuzzleCell[] cells = row.getAvailableCells();
+                getCandidateList().addAll(Arrays.asList(cells));
+            }
         }
+        myTryCell = getCandidateList().get(myCellIndex);
+        return getCandidateList().size();
+    }
+
+    int buildTryList() {
+        // populate the list of available values for this cell
+        myTryList = myTryCell.computePossibleValues();
+        return myTryList.length;
+
+    }
+
+    void reset() {
+        setCandidateList(null);
+    }
+    
+    private static void setCandidateList(LinkedList<PuzzleCell> list) {
+        myCandidateList = list;
+    }
+    
+    private static LinkedList<PuzzleCell> getCandidateList() {
+        return myCandidateList;
     }
 
     /* properties */
-    private final PuzzleWindow _puzzleWindow;
+    private final PuzzleWindow myPuzzleWindow;
+
     // list of cell candidates
-    private Stack<PuzzleCell> _cellCandidates;
-    // needed to unwind our attempts if we fail
-    private final Stack<PuzzleCell> _cellTries = new Stack<>();
+    private static LinkedList<PuzzleCell> myCandidateList;
 
-    private static int _instanceCnt = 0;
-    private int _instanceNo = 0;
-    private final PuzzleCell _parentCell;
+    // list of available values to try
+    private Integer[] myTryList;
 
-    static boolean DEBUG = false;
+    // index to this cell
+    private final int myCellIndex;
+    private PuzzleCell myTryCell;
+
+    static final boolean DEBUG = false;
+    static String myLogFile = "sudoku.log";
+    static PrintWriter myLog = null;
 }

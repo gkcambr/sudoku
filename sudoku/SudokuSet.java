@@ -16,19 +16,77 @@
  */
 package sudoku;
 
+import static java.lang.Math.pow;
+import java.util.LinkedList;
+
 /**
  *
  * @author keithc
  */
-public interface SudokuSet {
+public class SudokuSet {
+
+    SudokuSet() {
+        reset();
+    }
+
+    final void reset() {
+        mySetCells.clear();
+        myAvailableValues = 0;
+    }
+
+    void removeMember(PuzzleCell remcell) {
+        for (PuzzleCell cell : mySetCells) {
+            if (cell.getValue() == remcell.getValue()) {
+                mySetCells.remove(cell);
+            }
+        }
+    }
+
+    void addMember(PuzzleCell cell) {
+        mySetCells.add(cell);
+    }
+
+    PuzzleCell containsValue(int value) {
+        PuzzleCell ret = null;
+        for (PuzzleCell cell : mySetCells) {
+            if (value == cell.getValue()) {
+                ret = cell;
+                break;
+            }
+        }
+        return ret;
+    }
+
+    PuzzleCell[] getCells() {
+        return mySetCells.toArray(new PuzzleCell[9]);
+    }
     
-    void reset();
-    void removeMember(PuzzleCell cell);
-    void addMember(PuzzleCell cell);
-    boolean containsCell(PuzzleCell cell);
-    PuzzleCell containsValue(int value);
-    PuzzleCell[] getCells();
-    PuzzleCell[] getAvailableCells();
-    PuzzleCell[] getUnavailableCells();
-    SudokuMap findAvailableMembers(SudokuMap otherSet);
+    PuzzleCell[] getAvailableCells() {
+        LinkedList<PuzzleCell> avails = new LinkedList<>();
+        for(PuzzleCell cell: getCells()) {
+            if(cell.getType() == PuzzleCell.VALUE_TYPE_AVAILABLE) {
+                avails.add(cell);
+            }
+        }
+        return avails.toArray(new PuzzleCell[avails.size()]);
+    }
+    
+    void updateAvailableValues() {
+        myAvailableValues=ALL_VALUES;
+        for(PuzzleCell cell : mySetCells) {
+            if(cell.getValue() != PuzzleCell.UNDEFINED) {
+                int andValue = (int) (ALL_VALUES - pow(2,(cell.getValue() - 1)));
+                myAvailableValues &= andValue;
+            }
+        }
+    }
+    
+    int getValues() {
+        return myAvailableValues;
+    }
+
+    /* properties */
+    static final int ALL_VALUES = (int) (pow(2,9) - 1);
+    private final LinkedList<PuzzleCell> mySetCells = new LinkedList<>();
+    private int myAvailableValues = ALL_VALUES;
 }

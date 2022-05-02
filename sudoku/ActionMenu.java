@@ -35,11 +35,10 @@ public final class ActionMenu extends Menu {
     @Override
     public void updateEnabledMenus(boolean enabled) {
 
-        _clearPuzzleItem.setEnabled(enabled);
-        _clearTriesItem.setEnabled(enabled);
-        _clearAutoSolvedItem.setEnabled(enabled);
-        _hintItem.setEnabled(enabled);
-        _solveItem.setEnabled(enabled);
+        myClearPuzzleItem.setEnabled(enabled);
+        myClearTriesItem.setEnabled(enabled);
+        myClearAutoSolvedItem.setEnabled(enabled);
+        mySolveItem.setEnabled(enabled);
     }
 
     @Override
@@ -49,76 +48,62 @@ public final class ActionMenu extends Menu {
         setText("Action");
 
         // create a clear puzzle item
-        _clearPuzzleItem = new JMenuItem("Clear all", null);
-        _clearPuzzleItem.setMnemonic(KeyEvent.VK_C);
-        _clearPuzzleItem.setToolTipText("Clear all puzzle entries");
-        _clearPuzzleItem.addActionListener(new ActionListener() {
+        myClearPuzzleItem = new JMenuItem("Clear all", null);
+        myClearPuzzleItem.setMnemonic(KeyEvent.VK_C);
+        myClearPuzzleItem.setToolTipText("Clear all puzzle entries");
+        myClearPuzzleItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent event) {
-                _puzzleWindow.clearEntries(PuzzleCell.VALUE_TYPE_ALL);
+                myPuzzleWindow.clearEntries(PuzzleCell.VALUE_TYPE_ALL);
             }
         });
-        add(_clearPuzzleItem);
-        _clearPuzzleItem.setEnabled(true);
+        add(myClearPuzzleItem);
+        myClearPuzzleItem.setEnabled(true);
 
         // create a clear tries item
-        _clearTriesItem = new JMenuItem("Clear tries", null);
-        _clearTriesItem.setMnemonic(KeyEvent.VK_T);
-        _clearTriesItem.setToolTipText("Clear puzzle try entries");
-        _clearTriesItem.addActionListener(new ActionListener() {
+        myClearTriesItem = new JMenuItem("Clear tries", null);
+        myClearTriesItem.setMnemonic(KeyEvent.VK_T);
+        myClearTriesItem.setToolTipText("Clear puzzle try entries");
+        myClearTriesItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent event) {
-                _puzzleWindow.clearEntries(PuzzleCell.VALUE_TYPE_TRY);
+                myPuzzleWindow.clearEntries(PuzzleCell.VALUE_TYPE_TRY);
             }
         });
-        add(_clearTriesItem);
-        _clearTriesItem.setEnabled(true);
+        add(myClearTriesItem);
+        myClearTriesItem.setEnabled(true);
 
         // create a clear auto solved item
-        _clearAutoSolvedItem = new JMenuItem("Clear solved", null);
-        _clearAutoSolvedItem.setMnemonic(KeyEvent.VK_O);
-        _clearAutoSolvedItem.setToolTipText("Clear puzzle try entries");
-        _clearAutoSolvedItem.addActionListener(new ActionListener() {
+        myClearAutoSolvedItem = new JMenuItem("Clear solved", null);
+        myClearAutoSolvedItem.setMnemonic(KeyEvent.VK_O);
+        myClearAutoSolvedItem.setToolTipText("Clear puzzle try entries");
+        myClearAutoSolvedItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent event) {
-                _puzzleWindow.clearEntries(PuzzleCell.VALUE_TYPE_AUTO);
+                myPuzzleWindow.clearEntries(PuzzleCell.VALUE_TYPE_AUTO);
             }
         });
-        add(_clearAutoSolvedItem);
-        _clearAutoSolvedItem.setEnabled(true);
-
-        // create a hint item
-        _hintItem = new JMenuItem("Show hint", null);
-        _hintItem.setMnemonic(KeyEvent.VK_H);
-        _hintItem.setToolTipText("Get hints");
-        _hintItem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent event) {
-                _puzzleWindow.showHints();
-            }
-        });
-        add(_hintItem);
-        _hintItem.setEnabled(true);
+        add(myClearAutoSolvedItem);
+        myClearAutoSolvedItem.setEnabled(true);
 
         // create a solve item
-        _solveItem = new JMenuItem("Solve", null);
-        _solveItem.setMnemonic(KeyEvent.VK_S);
-        _solveItem.setToolTipText("Get solves");
-        _solveItem.addActionListener(new ActionListener() {
+        mySolveItem = new JMenuItem("Solve", null);
+        mySolveItem.setMnemonic(KeyEvent.VK_S);
+        mySolveItem.setToolTipText("Get solves");
+        mySolveItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent event) {
-                _puzzleWindow.solve();
+                myPuzzleWindow.solve();
             }
         });
-        add(_solveItem);
-        _solveItem.setEnabled(true);
+        add(mySolveItem);
+        mySolveItem.setEnabled(true);
     }
 
     /* properties */
-    private JMenuItem _clearPuzzleItem;
-    private JMenuItem _clearTriesItem;
-    private JMenuItem _clearAutoSolvedItem;
-    private JMenuItem _hintItem;
-    private JMenuItem _solveItem;
+    private JMenuItem myClearPuzzleItem;
+    private JMenuItem myClearTriesItem;
+    private JMenuItem myClearAutoSolvedItem;
+    private JMenuItem mySolveItem;
     private static final long serialVersionUID = 100L;
 }

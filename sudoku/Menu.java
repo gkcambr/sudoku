@@ -24,15 +24,15 @@ import javax.swing.JMenu;
  */
 public abstract class Menu extends JMenu {
    
-    public Menu(PuzzleWindow listerWindow) {
+    Menu(PuzzleWindow listerWindow) {
         super();
-        _puzzleWindow = listerWindow;
+        myPuzzleWindow = listerWindow;
     }
     
     public abstract void updateEnabledMenus(boolean opened);
     public abstract void createMenu();
     
     // Properties
-    protected PuzzleWindow _puzzleWindow;
+    protected PuzzleWindow myPuzzleWindow;
     private static final long serialVersionUID = 100L;
 }

@@ -20,15 +20,11 @@ package sudoku;
  *
  * @author keithc
  */
-public class PuzzleColumn extends PuzzleRow {
+public class PuzzleColumn extends SudokuSet {
     
-    PuzzleColumn(int col) {
-        super(-1);
-        
-        _col = col;
+    PuzzleColumn() {
     }
     
     /* properties */
-    private final int _col;
 
 }

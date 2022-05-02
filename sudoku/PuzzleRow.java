@@ -20,59 +20,11 @@ package sudoku;
  *
  * @author keithc
  */
-public class PuzzleRow implements SudokuSet {
+public class PuzzleRow extends SudokuSet {
     
-    PuzzleRow(int row) {
-        _row = row;
+    PuzzleRow() {
     }    
 
-    @Override
-    public void reset() {
-        _map.reset();
-    }
-
-    @Override
-    public boolean containsCell(PuzzleCell member) {
-        return _map.containsCell(member);
-    }
-
-    @Override
-    public PuzzleCell containsValue(int value) {
-        return _map.containsValue(value);
-    }
-    
-    @Override
-    public SudokuMap findAvailableMembers(SudokuMap otherSet) {
-        return _map.findAvailableMembers(otherSet);
-    }
-    
-    @Override
-    public PuzzleCell[] getCells() {
-        return _map.getCells();
-    }
-    
-    @Override
-    public PuzzleCell[] getAvailableCells() {
-        return _map.getAvailableCells();
-    }
-    
-    @Override
-    public PuzzleCell[] getUnavailableCells() {
-        return _map.getUnavailableCells();
-    }
-    
-    @Override
-    public void removeMember(PuzzleCell button) {
-        _map.removeMember(button);
-    }
-    
-    @Override
-    public void addMember(PuzzleCell cell) {
-        _map.addMember(cell);
-    }
-    
     /* properties */
-    private final SudokuMap _map = new SudokuMap();
-    private final int _row;
 
 }
