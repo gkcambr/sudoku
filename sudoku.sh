@@ -9,4 +9,4 @@
 # that is in the environmental PATH variable
 #
 cd ${HOME}/sudoku
-java -jar ${HOME}/sudoku/SudokuUnlocked.jar
+java -jar ${HOME}/sudoku/sudoku.jar
